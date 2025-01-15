@@ -6,7 +6,7 @@ import com.tsf.demo.consumer.proxy.ProviderDemoService;
 import com.tsf.demo.consumer.proxy.ProviderService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jboss.logging.MDC;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.tsf.core.TsfContext;
@@ -64,7 +64,8 @@ public class ConsumerController {
     public String feignProvider(@PathVariable String str,
                                 @RequestParam(required = false) String tagName,
                                 @RequestParam(required = false) String tagValue) {
-        Map<String, Object> map = MDC.getMap();
+        MDC.put("trace_id", "t1111");
+        MDC.put("span_id", "s1111");
         log.info("receive str={}, tagName={}, tagValue={}", str, tagName, tagValue);
         if (!StringUtils.isEmpty(tagName)) {
             TsfContext.putTag(tagName, tagValue);
