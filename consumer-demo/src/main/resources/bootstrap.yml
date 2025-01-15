@@ -4,9 +4,9 @@ spring:
   application:
     name: consumer-demo
 
-feign:
-  tsf:
-    enabled: true
+#feign:
+#  tsf:
+#    enabled: true
 
 #本地测试时打开
 tsf_namespace_id: default_namespace
