@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: consul-demo
+  cloud:
+    consul:
+      config:
+        prefixes: config
+        default-context: application
+        data-key: data
+        watch:
+          enabled: true
+        format: yaml
+      discovery:
+        enabled: true
+        tags: secure=false
+      host: consul-server
+  config:
+    import: "optional:consul:"
+server:
+  port: 18085
+management:
+  security:
+    enabled: false
