@@ -13,7 +13,7 @@ spring:
       discovery:
         enabled: true
         tags: secure=false
-      host: consul-server
+      host: consul-server # test callback in container
   config:
     import: "optional:consul:"
 server:
