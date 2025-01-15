@@ -165,6 +165,10 @@ https://cloud.tencent.com/document/product/649/19049
 > 原生应用的服务治理功能是基于TSF Mesh来实现的
 >
 > 服务调用会经过TSF Mesh的sidecar从而实现服务注册发现，服务调用，负载均衡，路由等功能
+>
+> 网络代理分为三个组件: pilot-agent Mesh-DNS Envoy
+>
+> https://cloud.tencent.com/document/product/649/33884
 
 #### 服务注册
 
