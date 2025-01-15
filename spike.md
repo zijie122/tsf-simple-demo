@@ -61,7 +61,7 @@ TSF SDK 1.46.x
   docker-compose -f docker/consul/docker-compose.yml up -d
   ```
 
-- 访问 http://localhost:8500/ui 和 `http://localhost:18085/test`
+- 访问 http://localhost:8500/ui 和 http://localhost:18085/test
 
 ## TSF框架SDK
 
