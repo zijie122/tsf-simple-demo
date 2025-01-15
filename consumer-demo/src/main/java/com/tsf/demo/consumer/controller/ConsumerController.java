@@ -20,8 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.AsyncRestTemplate;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Map;
-
 @RestController
 public class ConsumerController {
     private static final Logger log = LogManager.getLogger(ConsumerController.class);

@@ -1,0 +1,30 @@
+{
+  "node_name": "consul-server",
+  "server": true,
+  "bootstrap": true,
+  "ui_config": {
+    "enabled": true
+  },
+  "data_dir": "/consul/data",
+  "addresses": {
+    "http": "0.0.0.0"
+  },
+  "watches": [
+    {
+      "type": "key",
+      "key": "config/application/data",
+      "handler_type": "http",
+      "http_handler_config": {
+        "path": "http://consul-demo:18085/callback",
+        "method": "POST",
+        "header": {
+          "Authorization": [
+            "test"
+          ]
+        },
+        "timeout": "10s",
+        "tls_skip_verify": true
+      }
+    }
+  ]
+}

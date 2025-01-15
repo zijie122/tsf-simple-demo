@@ -43,6 +43,26 @@ springcloud 2021
 TSF SDK 1.46.x
 ```
 
+## 本地轻量服务注册中心
+
+> 需要在本地安装好maven + docker compose
+
+- 打包**consul-demo**
+
+  ```sh
+  cd consul-demo
+  mvn clean package
+  ```
+
+- 启动**consul-server**和**consul-demo**
+
+  ```sh
+  # 回到项目根目路
+  docker-compose -f docker/consul/docker-compose.yml up -d
+  ```
+
+- 访问 http://localhost:8500/ui 和 `http://localhost:18085/test`
+
 ## TSF框架SDK
 
 https://cloud.tencent.com/document/product/649
