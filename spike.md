@@ -190,6 +190,8 @@ https://cloud.tencent.com/document/product/649/19049
 
 基于自定义标签`headers={'custom-key':'custom-value'}`
 
+>目前Mesh集成的自定义标签有两种: 1.普通标签 2:mesh标签(感觉这个更具有业务含义，指定被mesh采集使用)
+
 #### 服务路由
 
 #### 服务限流
