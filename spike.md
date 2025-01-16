@@ -191,6 +191,8 @@ https://cloud.tencent.com/document/product/649/16621
 
   也可以自己写配置文件，但是会被线上配置的规则覆盖，测试时可用
 
+TSF摒弃了已经不再继续维护的Hystrix断路器，采用官方推荐的**Resilience4J**作为底层实现
+
 #### 服务容错
 
 https://cloud.tencent.com/document/product/649/40582
@@ -199,7 +201,7 @@ https://cloud.tencent.com/document/product/649/40582
 - 如果需要使用 feign 的如下降级功能，则需要关闭 Hystrix 开关
 
 ```Java
-// @FeignClient(name = "circuit-breaker-mock-service", fallbackFactory = HystrixClientFallbackFactory.class)
+@FeignClient(name = "circuit-breaker-mock-service", fallbackFactory = HystrixClientFallbackFactory.class)
 @FeignClient(name = "circuit-breaker-mock-service", fallback = FeignClientFallback.class)
 ```
 ```yaml
@@ -322,16 +324,14 @@ https://cloud.tencent.com/document/product/649/54152
 
 原生Srping cloud可以借助TSF平台实现服务限流，有两种方式:
 
-原生Srping cloud可以借助TSF平台实现服务限流，有两种方式：
-
 - 自定义标签，需在 HTTP 请求头添加 tsf-mesh-tag: KEY=VALUE
 - 同上服务路由方式，配合Service Mesh。
 
-需要通过业务配置侵入来关闭Resilience或Sentinel。
+需要通过业务配置侵入来关闭Resilience或Sentinel
 
-Resilience
-不支持配置，只能通过 transitionToDisabledState() 或自行修改代码来关闭。
-transitionToDisabledState 示例如下：
+**Resilience**
+
+不支持配置，只能通过 transitionToDisabledState() 或自行修改代码来关闭。transitionToDisabledState 示例如下:
 
 ```Java
 public class ProviderServiceResilience {
@@ -356,8 +356,10 @@ public class ProviderServiceResilience {
     }
 }
 ```
-Spring Cloud Circuit Breaker - Resilience
-可以通过 property spring.cloud.circuitbreaker.resilience4j.enabled 关闭，修改 application.yml：
+**Spring Cloud Circuit Breaker - Resilience**
+
+修改`application.yml`
+
 ```yaml
 spring:
   cloud:
@@ -365,9 +367,9 @@ spring:
       resilience4j:
         enabled: false
 ```
-Sentinel
-需要自行修改代码来关闭。
-可以通过 property spring.cloud.circuitbreaker.sentinel.enabled 关闭，修改 application.yml：
+**Sentinel**
+
+修改`application.yml`
 
 ```yaml
 spring:
@@ -381,16 +383,41 @@ spring:
 
 https://cloud.tencent.com/document/product/649/54152
 
-TSF使用开源hystrix实现。
-如果要使用TSF实现的限流和熔断，需要关闭服务自身的Spring Cloud Hystrix。
+支持Hystrix，如果要使用TSF实现的熔断，需要关闭服务自身的Hystrix/Spring Cloud Hystrix
+
+```yaml
+# 如果用了Feign，此方式也可以关闭其中的熔断功能
+hystrix:
+ command:
+   default:
+     circuitBreaker:
+       enabled: false
+```
+
+> 云原生Mesh应用集成TSF熔断需要关闭自身熔断是否可用如下配置
+
+```yaml
+feign:
+  hystrix:
+    enabled: false
+```
 
 #### ~~<b style="color:red">服务容错</b>~~
 
-暂未找到相关文档。
+暂未找到相关文档
 
-> 猜测服务容错需要原生服务自己实现。
-> 即使使用的是TSF SDK集成方式，容错规则同样需要服务自己实现。
+> 猜测服务容错需要原生服务自己实现
+>
+> 即使使用的是TSF SDK集成方式，容错规则同样需要服务自己实现
 
 ## TodoList
 
 * [ ] Mesh应用的自定义标签(普通header和mesh header)具体的应用场景
+* [ ] 云原生Mesh应用集成TSF熔断需要关闭自身熔断是否可用如下配置
+
+```yaml
+feign:
+  hystrix:
+    enabled: false
+```
+
