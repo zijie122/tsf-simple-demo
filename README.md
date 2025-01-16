@@ -94,6 +94,10 @@ https://cloud.tencent.com/document/product/649
 
 TSF搭建时会将内置的consul注册中心地址写入环境变量，应用部署在TSF上后自动获取注入
 
+如果是其他类型的注册中心(如Eureka)需要进行依赖修改和注解更新以支持TSF的consul
+
+https://cloud.tencent.com/document/product/649/16617#.E4.BB.8E-eureka-.E8.BF.81.E7.A7.BB.E5.BA.94.E7.94.A8
+
 #### 配置管理
 
 - 热更新
@@ -254,7 +258,7 @@ https://cloud.tencent.com/document/product/649/19049
 
 #### 服务注册
 
-需要配置`spec.yaml`文件文件用于描述服务信息，sidecar会通过服务描述文件将服务注册到服务注册中心
+需要配置`spec.yaml`文件文件用于描述服务信息，sidecar会通过服务描述文件将服务注册到服务注册中心，目前只支持Consul和Eureka
 
 `spec.yaml`支持本地配置和**控制台配置**
 
