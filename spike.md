@@ -154,10 +154,17 @@ https://cloud.tencent.com/document/product/649/16621#.E6.9C.8D.E5.8A.A1.E9.89.B4
 
 https://cloud.tencent.com/document/product/649/16621
 
+有两种方式来实现服务路由：
+
+1、在TSF平台配置路由规则
+
 - 添加依赖（服务提供方）
 - 在TSF控制台维护路由规则，规则需要配置在服务提供方
+
+2、使用自定义的Tag实现
+
+- 服务调用Spring Cloud应用中需要使用SDK并添加开启路由注解@EnableTsfRoute
 - 服务调用方配置好相应规则的内容（比如内测user_id之类的值）
-- 如果Spring Cloud访问其他配置了服务路由的服务，要使服务路由生效，Spring Cloud应用中需要使用SDK并添加开启路由注解@EnableTsfRoute
 
 > 在新版本（2.0.0 Release）中，@EnableTsf及下属的注解都被标记为废弃，但目前尚未找到替代的注解，猜测有可能TSF平台发展后续是否倾向于删除这些注解
 
@@ -178,10 +185,13 @@ https://cloud.tencent.com/document/product/649/16621
 
 #### 服务容错
 
+https://cloud.tencent.com/document/product/649/40582
+
 - 添加依赖（服务调用方）注解使用@EnableTsfFaultTolerance。
 - 如果需要使用 feign 的如下降级功能，则需要关闭 Hystrix 开关。
+
 ```Java
-@FeignClient(name = "circuit-breaker-mock-service", fallbackFactory = HystrixClientFallbackFactory.class)
+// @FeignClient(name = "circuit-breaker-mock-service", fallbackFactory = HystrixClientFallbackFactory.class)
 @FeignClient(name = "circuit-breaker-mock-service", fallback = FeignClientFallback.class)
 
 // 关闭Hystrix开关，（默认是关闭的，如果之前使用了该功能，可以删除该配置或者关闭）
@@ -287,6 +297,8 @@ public class FeignConfig {
 - 同上服务路由方式，配合Service Mesh。
 
 #### 服务熔断
+
+https://cloud.tencent.com/document/product/649/54152
 
 TSF使用开源hystrix实现。
 如果要使用TSF实现的限流和熔断，需要关闭服务自身的Spring Cloud Hystrix或者Resilience
