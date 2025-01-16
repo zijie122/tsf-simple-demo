@@ -1,12 +1,12 @@
-## TL;DR
+## <span style="color:gray">TL;DR</span>
 
 TODO
 
-## 开发概述
+## <span style="color:gray">开发概述</span>
 
 TODO
 
-## 背景介绍
+## <span style="color:gray">背景介绍</span>
 
 TODO
 
@@ -51,9 +51,19 @@ TSF SDK 1.46.x
 
 - 访问 http://localhost:8500/ui 和 http://localhost:18085/test
 
+> 
+>
+> 以下介绍中所有加了⚠️的内容都是根据逻辑的猜测，没有基于真实的TSF环境进行测试
+>
+> 
+
 ## TSF框架SDK
 
 https://cloud.tencent.com/document/product/649
+
+> ⚠️ 框架SDK和SpringCloudTencent集成区别在于框架SDK更针对SpringCloud应用
+>
+> 而SpringCloudTencent可支持普通的java应用进行云化并提供TSF的一站式功能
 
 #### 前置配置
 
@@ -130,7 +140,7 @@ public class SimpleConfigurationListener implements ConfigChangeCallback {
 
 必须部署到TSF中才会生成traceid和spanid到MDC
 
-> 需要修改logging配置
+> ⚠️ 需要修改logging配置
 
 ```yaml
 logging:
@@ -150,31 +160,33 @@ https://cloud.tencent.com/document/product/649/16621#.E6.9C.8D.E5.8A.A1.E9.89.B4
 
 https://cloud.tencent.com/document/product/649/16621
 
-有两种方式来实现服务路由：
+有两种方式来实现服务路由:
 
 1. 在TSF平台配置路由规则
 
-- 添加依赖（服务提供方）
+- 添加依赖及注解(服务提供方)
 - 在TSF控制台维护路由规则，规则需要配置在服务提供方
 
-2. 使用自定义标签实现
+2. 基于自定义标签配置路由规则
 
-- 服务调用Spring Cloud应用中需要使用SDK并添加开启路由注解`@EnableTsfRoute`
-- 服务调用方配置好相应规则的内容（比如内测user_id之类的值）
+- 添加依赖及注解(服务调用方和提供方)
+- 服务调用方配置好相应规则的内容，通过`TsfContext`进行自定义标签的设置
 
-> 在新版本（2.0.0 Release）中，@EnableTsf及下属的注解都被标记为废弃，但目前尚未找到替代的注解，猜测有可能TSF平台发展后续是否倾向于删除这些注解
+> TSF新版本(2.0.0 Release)中，`@EnableTsf`及下属注解都被标记为废弃，目前尚未找到替代的注解
+>
+> ⚠️ 猜测有可能TSF平台发展后续是否倾向于删除这些注解
 
 #### 服务限流
 
 https://cloud.tencent.com/document/product/649/16621
 
-- 添加依赖(服务提供方)，注解使用`@EnableTsfRateLimit`
+- 添加依赖及注解`@EnableTsfRateLimit`(服务提供方)
 - 建立限流规则
 - 启动限流即可
 
 #### 服务熔断
 
-- 添加依赖(服务调用方)，注解使用`@EnableTsfCircuitBreaker`
+- 添加依赖及注解`@EnableTsfCircuitBreaker`(服务调用方)
 - TSF平台配置熔断规则
 
   也可以自己写配置文件，但是会被线上配置的规则覆盖，测试时可用
@@ -185,20 +197,24 @@ TSF摒弃了已经不再继续维护的Hystrix断路器，采用官方推荐的*
 
 https://cloud.tencent.com/document/product/649/40582
 
-- 添加依赖(服务调用方)，注解使用`@EnableTsfFaultTolerance`
-- 如果需要使用 feign 的如下降级功能，则需要关闭 Hystrix 开关
+- 添加依赖及注解`@EnableTsfFaultTolerance`(服务调用方)
+- 如果需要使用feign的降级功能(如下)，则需要关闭Hystrix开关(若当前没有Hystrix的依赖可忽略)
 
 ```Java
-@FeignClient(name = "circuit-breaker-mock-service", fallbackFactory = HystrixClientFallbackFactory.class)
-@FeignClient(name = "circuit-breaker-mock-service", fallback = FeignClientFallback.class)
+@FeignClient(name="circuit-breaker-mock-service",fallbackFactory=HystrixClientFallbackFactory.class)
+@FeignClient(name="circuit-breaker-mock-service",fallback=FeignClientFallback.class)
 ```
+关闭Hystrix开关(默认是关闭的，如果之前使用了该功能，可以删除该配置或者关闭)
+
 ```yaml
-// 关闭Hystrix开关，（默认是关闭的，如果之前使用了该功能，可以删除该配置或者关闭）
 feign:
   hystrix:
     enabled: false
-    
-// 打开 TSF 开关：
+```
+
+打开TSF熔断开关
+
+```yaml
 feign:
   tsf:
     enabled: true
@@ -254,15 +270,16 @@ https://cloud.tencent.com/document/product/649/19049
 
 文件配置：支持用户通过控制台将配置下发到服务器的指定目录。应用程序通过读取该目录下的配置文件实现特殊的业务逻辑
 
-> 原生应用与Mesh应用不支持应用配置和全局配置
+> 原生应用与Mesh应用不支持应用配置和全局配置，文件配置都支持，若想支持应用配置和全局配置需要使用**TSF框架SDK**集成
 >
-> 应用配置和全局配置都要业务应用主动去TSF拉取/轮询配置的变更然后更改最后refresh，默认的springcloud云原生应用实现了拉取consul的配置，但只能更新本地配置，无法更新应用配置和全局配置，因此云原生也支持本地配置
->
-> 文件配置都支持
 
-若想支持应用配置和全局配置需要使用**TSF框架SDK**集成
+⚠️ 默认的springcloud云原生应用的注册中心是通过sidecar代理本地网络基于TSF内置consul实现的
+
+sidecar无法连接到业务应用指定的配置中心，因此无法实现配置管理功能
 
 #### 监控
+
+⚠️ 指标信息和框架SDK一致
 
 #### 调用链
 
@@ -270,7 +287,7 @@ https://cloud.tencent.com/document/product/649/54151
 
 目前支持Zipkin的[B3 Propagation](https://github.com/openzipkin/b3-propagation)，所以只要是和Zipkin B3兼容的SDK均可，例如Spring Cloud Sleuth
 
-> 针对其他语言类型的Mesh应用，sidecar可通过'tsf-mesh-tag'header获取应用相关的业务信息
+> ⚠️ 针对其他语言类型的Mesh应用，sidecar可通过'tsf-mesh-tag'header自定义标签获取应用相关的业务信息实现调用链
 
 #### 服务鉴权
 
@@ -278,19 +295,18 @@ https://cloud.tencent.com/document/product/649/19049
 
 基于自定义标签`headers={'custom-key':'custom-value'}`
 
->目前Mesh集成的自定义标签有两种: 1.普通标签 2:mesh标签(感觉这个更具有业务含义，指定被mesh采集使用)
+>⚠️ 目前Mesh集成的自定义标签有两种: 1.普通标签 2:mesh标签(感觉这个更具有业务含义，指定被mesh采集使用)
 
 #### 服务路由
 
 https://cloud.tencent.com/document/product/649/54147
 
-- 与Mesh配合，在请求头里加入指定的key
+与Mesh配合添加自定义标签，在请求头里加入指定的key
 
 ```Java
 // 以拦截FeignClient请求为例
 @Configuration
 public class FeignConfig {
-
     @Bean
     public RequestInterceptor requestInterceptor() {
         return new RequestInterceptor() {
@@ -304,7 +320,7 @@ public class FeignConfig {
 }
 ```
 
-> 猜测直接在TSF平台配置路由规则，也可以实现路由，尚未验证
+> ⚠️ 猜测直接在TSF平台配置路由规则，也可以实现路由，尚未验证
 
 #### 服务限流
 
@@ -312,10 +328,12 @@ https://cloud.tencent.com/document/product/649/54152
 
 原生Srping cloud可以借助TSF平台实现服务限流，有两种方式:
 
-- 自定义标签，需在 HTTP 请求头添加 tsf-mesh-tag: KEY=VALUE
+- 自定义标签，需在HTTP请求头添加tsf-mesh-tag: KEY=VALUE
 - 同上服务路由方式，配合Service Mesh
 
-服务限流的组件不支持通过property配置，需自行修改代码来关闭
+业务应用若需使用TSF的限流功能需要禁用自身组件的限流
+
+业务服务相关的限流组件(Resilience和Sentinel)不支持通过property配置，需自行修改代码来关闭
 
 #### 服务熔断
 
@@ -325,7 +343,7 @@ https://cloud.tencent.com/document/product/649/54152
 
 **Hystrix/Spring Cloud Hystrix**
 
-> springcloud 2021已经移除了Hystrix改为**Spring Cloud Circuit Breaker - Resilience**
+> 在springcloud 2020中已经移除了Hystrix改为**Spring Cloud Circuit Breaker - Resilience**
 
 ```yaml
 # 如果用了Feign，此方式也可以关闭其中的熔断功能
@@ -336,7 +354,7 @@ hystrix:
        enabled: false
 ```
 
-> 云原生Mesh应用集成TSF熔断需要关闭自身熔断是否可用如下配置
+> ⚠️ 云原生Mesh应用集成TSF熔断需要关闭自身熔断是否可用如下配置
 
 ```yaml
 feign:
@@ -346,7 +364,7 @@ feign:
 
 **Resilience**
 
-不支持配置，只能通过 transitionToDisabledState() 或自行修改代码来关闭。transitionToDisabledState 示例如下:
+不支持配置，只能通过`transitionToDisabledState()`或自行修改代码来关闭。`transitionToDisabledState()`示例如下:
 
 ```Java
 public class ProviderServiceResilience {
@@ -400,9 +418,7 @@ spring:
 
 暂未找到相关文档
 
-> 猜测服务容错需要原生服务自己实现
->
-> 即使使用的是TSF SDK集成方式，容错规则同样需要服务自己实现
+> ⚠️ 支持通过TSF框架SDK集成方式，容错规则同样需要服务自己实现
 
 ## 术语
 
@@ -420,7 +436,9 @@ https://help.aliyun.com/document_detail/159741.html
 
 **网关单元化**: 将部分请求通过全局参数方式确保且请求在整个链路中都是同一个单元化应用(全业务应用)处理
 
-> DNS智能解析会将请求转发到就近的单元化网关 https://help.aliyun.com/zh/dns/intelligent-dns-resolution
+> ⚠️ 在多AZ部署下DNS智能解析会将请求转发到就近的单元化网关
+>
+> https://help.aliyun.com/zh/dns/intelligent-dns-resolution
 >
 > 单元化应用部署存在的一些问题
 >
@@ -432,20 +450,6 @@ https://help.aliyun.com/document_detail/159741.html
 
 #### 泳道
 
-相当于一个灰度环境
+服务调用配置，可基于此实现灰度环境
 
 https://cloud.tencent.com/document/product/649/43464
-
-## TodoList
-
-* [x] Mesh应用的自定义标签(普通header和mesh header)具体的应用场景
-* [x] 云原生Mesh应用集成TSF熔断需要关闭自身熔断是否可用如下配置
-
-```yaml
-feign:
-  hystrix:
-    enabled: false
-```
-
-* [ ] TencentCloud集成和框架SDK集成的区别
-* [x] 云原生Mesh应用的路由和鉴权无法针对API级别，但是在Mesh应用配置中是暴露了api给sidecar的
