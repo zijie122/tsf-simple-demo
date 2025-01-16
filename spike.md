@@ -291,19 +291,73 @@ public class FeignConfig {
 
 #### 服务限流
 
+https://cloud.tencent.com/document/product/649/54152
+
 原生Srping cloud可以借助TSF平台实现服务限流，有两种方式：
 
 - 自定义标签，需在 HTTP 请求头添加 tsf-mesh-tag: KEY=VALUE。
 - 同上服务路由方式，配合Service Mesh。
+
+需要通过业务配置侵入来关闭Resilience或Sentinel。
+
+Resilience
+不支持配置，只能通过 transitionToDisabledState() 或自行修改代码来关闭。
+transitionToDisabledState 示例如下：
+
+```Java
+public class ProviderServiceResilience {
+    private final static String cbName = "default";
+
+    private final CircuitBreakerRegistry cbRegistry;
+
+    public ProviderServiceResilience() {
+        cbRegistry = CircuitBreakerRegistry.ofDefaults();
+    }
+
+    public String run() {
+        try {
+            cbRegistry.circuitBreaker(cbName).executeCallable(...);
+        } catch (Exception e) {
+        }
+        return "resilience fallback\n";
+    }
+
+    public void disable() {
+        cbRegistry.circuitBreaker(cbName).transitionToDisabledState();
+    }
+}
+```
+Spring Cloud Circuit Breaker - Resilience
+可以通过 property spring.cloud.circuitbreaker.resilience4j.enabled 关闭，修改 application.yml：
+```yaml
+spring:
+  cloud:
+    circuitbreaker:
+      resilience4j:
+        enabled: false
+```
+Sentinel
+需要自行修改代码来关闭。
+可以通过 property spring.cloud.circuitbreaker.sentinel.enabled 关闭，修改 application.yml：
+
+```yaml
+spring:
+  cloud:
+    circuitbreaker:
+      sentinel:
+        enabled: false
+```
 
 #### 服务熔断
 
 https://cloud.tencent.com/document/product/649/54152
 
 TSF使用开源hystrix实现。
-如果要使用TSF实现的限流和熔断，需要关闭服务自身的Spring Cloud Hystrix或者Resilience
+如果要使用TSF实现的限流和熔断，需要关闭服务自身的Spring Cloud Hystrix。
 
 #### 服务容错
 
-服务容错需要原生服务自己实现。
-即使使用的是TSF SDK集成方式，容错规则同样需要服务自己实现。
+暂未找到相关文档。
+
+> 猜测服务容错需要原生服务自己实现。
+> 即使使用的是TSF SDK集成方式，容错规则同样需要服务自己实现。
