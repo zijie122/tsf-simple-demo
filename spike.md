@@ -141,6 +141,14 @@ public class SimpleConfigurationListener implements ConfigChangeCallback {
   ```
 
 > 必须部署到TSF中才会生成traceid和spanid到MDC
+>
+> 需要修改logging配置
+
+```yaml
+logging:
+  pattern:
+    level: "%-5level [${spring.application.name},%mdc{trace_id},%mdc{span_id},]"
+```
 
 #### 服务鉴权
 
@@ -244,6 +252,22 @@ https://cloud.tencent.com/document/product/649/19049
 `spec.yaml`支持本地配置和**控制台配置**
 
 #### ~~<b style="color:red">配置</b>~~
+
+**配置类型**
+
+应用配置：生效在单个应用上面，发布的范围是部署组维度，属于 TSF 平台上的配置
+
+全局配置：生效在整个集群或者命名空间，发布的范围是命名空间维度，属于 TSF 平台上的配置。
+
+本地配置：是应用程序在代码工程中创建的配置（如 application.yml 和 bootstrap.yml ）
+
+文件配置：支持用户通过控制台将配置下发到服务器的指定目录。应用程序通过读取该目录下的配置文件实现特殊的业务逻辑。
+
+> 原生应用与Mesh应用不支持应用配置和全局配置
+>
+> 应用配置和全局配置都要业务应用主动去TSF拉取/轮询配置的变更然后更改最后refresh，默认的springcloud云原生应用实现了拉取consul的配置，但只能更新本地配置，无法更新应用配置和全局配置，因此云原生也支持本地配置
+>
+> 文件配置都支持
 
 #### 监控
 
