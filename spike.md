@@ -1,34 +1,14 @@
-## 术语
+## TL;DR
 
-https://cloud.tencent.com/document/product/649/13007
+TODO
 
-#### 单元化
+## 开发概述
 
-https://help.aliyun.com/document_detail/159741.html
+TODO
 
-单元化应用可以集中式部署，解决了网络延迟以及异地容灾
+## 背景介绍
 
-是指一个能完成所有业务操作的自包含集合，在这个集合中包含了所有业务所需的所有服务，以及分配给这个单元的数据，是一个五脏俱全的缩小版整站
-
-单元化需要进行数据分区，即不同单元处理不同分区的数据，分区数据的拆分规则和维度必须保证全业务一致，即分区数据不重叠
-
-**网关单元化**: 将部分请求通过全局参数方式确保且请求在整个链路中都是同一个单元化应用(全业务应用)处理
-
-> DNS智能解析会将请求转发到就近的单元化网关 https://help.aliyun.com/zh/dns/intelligent-dns-resolution
->
-> 单元化应用部署存在的一些问题
->
-> https://cloud.tencent.com/developer/article/2483729
->
-> 单AZ: 故障涉及数据复制
->
-> 多AZ: 故障存在灰度故障，且存在跨区域的通信延迟
-
-#### 泳道
-
-相当于一个灰度环境
-
-https://cloud.tencent.com/document/product/649/43464
+TODO
 
 ## 版本配套关系
 
@@ -38,10 +18,18 @@ springcloud version: https://spring.io/projects/spring-cloud
 
 ```
 jdk8
-springboot 2.7
-springcloud 2021
+springboot 2.7.18
+springcloud 2021.0.7
 TSF SDK 1.46.x
 ```
+
+## 工程目录
+
+| 工程名称      | 工程说明                          |
+| ------------- | --------------------------------- |
+| consumer-demo | TSF微服务治理服务消费者           |
+| provider-demo | TSF微服务治理服务提供者           |
+| consul-demo   | 基于开源 SpringCloudConsul 的示例 |
 
 ## 本地轻量服务注册中心
 
@@ -260,11 +248,11 @@ https://cloud.tencent.com/document/product/649/19049
 
 应用配置：生效在单个应用上面，发布的范围是部署组维度，属于 TSF 平台上的配置
 
-全局配置：生效在整个集群或者命名空间，发布的范围是命名空间维度，属于 TSF 平台上的配置。
+全局配置：生效在整个集群或者命名空间，发布的范围是命名空间维度，属于 TSF 平台上的配置
 
 本地配置：是应用程序在代码工程中创建的配置（如 application.yml 和 bootstrap.yml ）
 
-文件配置：支持用户通过控制台将配置下发到服务器的指定目录。应用程序通过读取该目录下的配置文件实现特殊的业务逻辑。
+文件配置：支持用户通过控制台将配置下发到服务器的指定目录。应用程序通过读取该目录下的配置文件实现特殊的业务逻辑
 
 > 原生应用与Mesh应用不支持应用配置和全局配置
 >
@@ -325,9 +313,36 @@ https://cloud.tencent.com/document/product/649/54152
 原生Srping cloud可以借助TSF平台实现服务限流，有两种方式:
 
 - 自定义标签，需在 HTTP 请求头添加 tsf-mesh-tag: KEY=VALUE
-- 同上服务路由方式，配合Service Mesh。
+- 同上服务路由方式，配合Service Mesh
 
-需要通过业务配置侵入来关闭Resilience或Sentinel
+服务限流的组件不支持通过property配置，需自行修改代码来关闭
+
+#### 服务熔断
+
+https://cloud.tencent.com/document/product/649/54152
+
+支持Hystrix，如果要使用TSF实现的熔断，需要关闭服务自身的熔断依赖
+
+**Hystrix/Spring Cloud Hystrix**
+
+> springcloud 2021已经移除了Hystrix改为**Spring Cloud Circuit Breaker - Resilience**
+
+```yaml
+# 如果用了Feign，此方式也可以关闭其中的熔断功能
+hystrix:
+ command:
+   default:
+     circuitBreaker:
+       enabled: false
+```
+
+> 云原生Mesh应用集成TSF熔断需要关闭自身熔断是否可用如下配置
+
+```yaml
+feign:
+  hystrix:
+    enabled: false
+```
 
 **Resilience**
 
@@ -356,6 +371,7 @@ public class ProviderServiceResilience {
     }
 }
 ```
+
 **Spring Cloud Circuit Breaker - Resilience**
 
 修改`application.yml`
@@ -367,6 +383,7 @@ spring:
       resilience4j:
         enabled: false
 ```
+
 **Sentinel**
 
 修改`application.yml`
@@ -379,29 +396,6 @@ spring:
         enabled: false
 ```
 
-#### 服务熔断
-
-https://cloud.tencent.com/document/product/649/54152
-
-支持Hystrix，如果要使用TSF实现的熔断，需要关闭服务自身的Hystrix/Spring Cloud Hystrix
-
-```yaml
-# 如果用了Feign，此方式也可以关闭其中的熔断功能
-hystrix:
- command:
-   default:
-     circuitBreaker:
-       enabled: false
-```
-
-> 云原生Mesh应用集成TSF熔断需要关闭自身熔断是否可用如下配置
-
-```yaml
-feign:
-  hystrix:
-    enabled: false
-```
-
 #### ~~<b style="color:red">服务容错</b>~~
 
 暂未找到相关文档
@@ -410,10 +404,42 @@ feign:
 >
 > 即使使用的是TSF SDK集成方式，容错规则同样需要服务自己实现
 
+## 术语
+
+https://cloud.tencent.com/document/product/649/13007
+
+#### 单元化
+
+https://help.aliyun.com/document_detail/159741.html
+
+单元化应用可以集中式部署，解决了网络延迟以及异地容灾
+
+是指一个能完成所有业务操作的自包含集合，在这个集合中包含了所有业务所需的所有服务，以及分配给这个单元的数据，是一个五脏俱全的缩小版整站
+
+单元化需要进行数据分区，即不同单元处理不同分区的数据，分区数据的拆分规则和维度必须保证全业务一致，即分区数据不重叠
+
+**网关单元化**: 将部分请求通过全局参数方式确保且请求在整个链路中都是同一个单元化应用(全业务应用)处理
+
+> DNS智能解析会将请求转发到就近的单元化网关 https://help.aliyun.com/zh/dns/intelligent-dns-resolution
+>
+> 单元化应用部署存在的一些问题
+>
+> https://cloud.tencent.com/developer/article/2483729
+>
+> 单AZ: 故障涉及数据复制
+>
+> 多AZ: 故障存在灰度故障，且存在跨区域的通信延迟
+
+#### 泳道
+
+相当于一个灰度环境
+
+https://cloud.tencent.com/document/product/649/43464
+
 ## TodoList
 
-* [ ] Mesh应用的自定义标签(普通header和mesh header)具体的应用场景
-* [ ] 云原生Mesh应用集成TSF熔断需要关闭自身熔断是否可用如下配置
+* [x] Mesh应用的自定义标签(普通header和mesh header)具体的应用场景
+* [x] 云原生Mesh应用集成TSF熔断需要关闭自身熔断是否可用如下配置
 
 ```yaml
 feign:
@@ -421,3 +447,5 @@ feign:
     enabled: false
 ```
 
+* [ ] TencentCloud集成和框架SDK集成的区别
+* [x] 云原生Mesh应用的路由和鉴权无法针对API级别，但是在Mesh应用配置中是暴露了api给sidecar的

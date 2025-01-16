@@ -21,3 +21,11 @@ server:
 management:
   security:
     enabled: false
+
+feign:
+  circuitbreaker:
+    enabled: false
+
+#feign: # supported on Hoxton.RELEASE version
+#  hystrix:
+#    enabled: false
