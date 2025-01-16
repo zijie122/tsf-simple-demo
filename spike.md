@@ -140,8 +140,8 @@ public class SimpleConfigurationListener implements ConfigChangeCallback {
       samplerRate: 0.1 # 默认为1
   ```
 
-> 必须部署到TSF中才会生成traceid和spanid到MDC
->
+必须部署到TSF中才会生成traceid和spanid到MDC
+
 > 需要修改logging配置
 
 ```yaml
@@ -231,8 +231,6 @@ public void doWork2() throws InterruptedException {
 }
 ```
 
-
-
 ## TSF云原生应用
 
 https://cloud.tencent.com/document/product/649/19049
@@ -268,6 +266,8 @@ https://cloud.tencent.com/document/product/649/19049
 > 应用配置和全局配置都要业务应用主动去TSF拉取/轮询配置的变更然后更改最后refresh，默认的springcloud云原生应用实现了拉取consul的配置，但只能更新本地配置，无法更新应用配置和全局配置，因此云原生也支持本地配置
 >
 > 文件配置都支持
+
+若想支持应用配置和全局配置需要使用**TSF框架SDK**集成
 
 #### 监控
 
@@ -379,9 +379,13 @@ https://cloud.tencent.com/document/product/649/54152
 TSF使用开源hystrix实现。
 如果要使用TSF实现的限流和熔断，需要关闭服务自身的Spring Cloud Hystrix。
 
-#### 服务容错
+#### ~~<b style="color:red">服务容错</b>~~
 
 暂未找到相关文档。
 
 > 猜测服务容错需要原生服务自己实现。
 > 即使使用的是TSF SDK集成方式，容错规则同样需要服务自己实现。
+
+## TodoList
+
+* [ ] Mesh应用的自定义标签(普通header和mesh header)具体的应用场景
