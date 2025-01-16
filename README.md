@@ -246,7 +246,7 @@ public void doWork2() throws InterruptedException {
 
 ## TSF云原生应用
 
-https://cloud.tencent.com/document/product/649/19049
+https://cloud.tencent.com/document/product/649/54147
 
 > 原生应用的服务治理功能是基于TSF Mesh来实现的
 >
@@ -258,7 +258,9 @@ https://cloud.tencent.com/document/product/649/19049
 
 #### 服务注册
 
-需要配置`spec.yaml`文件文件用于描述服务信息，sidecar会通过服务描述文件将服务注册到服务注册中心，目前只支持Consul和Eureka
+需要配置`spec.yaml`文件文件用于描述服务信息，sidecar会通过服务描述文件将服务注册到服务注册中心
+
+⚠️ 目前只支持Consul Eureka和Nacos
 
 `spec.yaml`支持本地配置和**控制台配置**
 
