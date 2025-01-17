@@ -1,13 +1,37 @@
 ## TL;DR
 
+基于TCS私有云平台集成TSF一站式微服务框架的方式:
+
+1. 云原生Mesh应用: 0代码侵入，部分微服务功能无法实现
+2. 框架SDK: 需要引入依赖和部分代码侵入，更全面的适配TSF，能正常使用全量功能
+
+其他集成方式暂不在本文章讨论范围
+
 具体Demo参考: https://github.com/zijie122/tsf-simple-demo
 
 ## 开发概述
 
+| 功能       | 云原生应用                             | 普通应用               |
+| ---------- | -------------------------------------- | ---------------------- |
+| 适用场景   | 存量业务应用开源Spring Cloud零代码改造 | 新业务全新技术框架选型 |
+| 集成方式   | Mesh流量劫持                           | 框架SDK                |
+| 注册发现   | ✓                                      | ✓                      |
+| 服务鉴权   | ✓                                      | ✓                      |
+| 服务限流   | ✓                                      | ✓                      |
+| 服务熔断   | ✓                                      | ✓                      |
+| 服务路由   | ✓                                      | ✓                      |
+| 调用链     | ✓ 支持服务级别                         | ✓                      |
+| 日志服务   | ✓                                      | ✓                      |
+| 配置管理   | 不支持                                 | ✓                      |
+| 优雅下线   | ✓                                      | ✓                      |
+| 全链路灰度 | ✓                                      | ✓                      |
+| 单元化     | 不支持                                 | ✓                      |
+
 ## 背景介绍
 
-客户最近在寻求一个能够满足微服务治理的解决方案，在此过程中，尝试测试腾讯的TSF框架，我们也在此过程中对腾讯的TSF框架做了一些调研。
-针对TSF服务治理和服务监控等做了初步调研，得到了一些初步的结论。
+某证券行业的客户在对自身的微服务应用进行云迁移，需要支持的微服务应用包含多版本springcloud应用，其他语言(Go Python)应用，以及部署在虚拟机上的应用等
+
+在大的信创背景下，客户选择了基于TCS私有云平台的TSF一站式微服务框架进行集成，结合常用的微服务组件相关功能我们目前针对TSF提供的**框架SDK**和**云原生Mesh应用**两种集成方式进行调研
 
 ## 版本配套关系
 
@@ -55,6 +79,10 @@ https://cloud.tencent.com/document/product/649
 
 TSF搭建时会将内置的consul注册中心地址写入环境变量，应用部署在TSF上后自动获取注入
 
+如果是其他类型的注册中心(如Eureka)需要进行依赖修改和注解更新以支持TSF的consul
+
+https://cloud.tencent.com/document/product/649/16617#.E4.BB.8E-eureka-.E8.BF.81.E7.A7.BB.E5.BA.94.E7.94.A8
+
 ### 配置管理
 
 - 热更新
@@ -79,7 +107,7 @@ public class SimpleConfigurationListener implements ConfigChangeCallback {
 
 `com.tencent.tsf.consul.config.ConfigWatch` 监听Consul的配置变化
 
-> 该功能为tsf内置功能，原生consul框架也有相同的逻辑获取配置变更，可见consul-demo
+> 该功能为TSF内置功能，原生consul框架也有相同的ConfigWatch逻辑获取配置变更，可见consul-demo
 
 ### 监控
 
@@ -101,14 +129,6 @@ public class SimpleConfigurationListener implements ConfigChangeCallback {
 
 必须部署到TSF中才会生成traceid和spanid到MDC
 
-> 需要修改logging配置
-
-```yaml
-logging:
-  pattern:
-    level: "%-5level [${spring.application.name},%mdc{trace_id},%mdc{span_id},]"
-```
-
 ### 服务鉴权
 
 https://cloud.tencent.com/document/product/649/16621#.E6.9C.8D.E5.8A.A1.E9.89.B4.E6.9D.83
@@ -121,32 +141,33 @@ https://cloud.tencent.com/document/product/649/16621#.E6.9C.8D.E5.8A.A1.E9.89.B4
 
 https://cloud.tencent.com/document/product/649/16621
 
-有两种方式来实现服务路由：
+有两种方式来实现服务路由:
 
 1. 在TSF平台配置路由规则
 
-- 在服务提供方添加依赖，注解使用`@EnableTsfRoute`
+- 添加依赖及注解`@EnableTsfRoute`(服务提供方)
 - 在TSF控制台维护路由规则，规则需要配置在服务提供方
 
-2. 使用自定义标签实现
+2. 基于自定义标签配置路由规则
 
-- Spring Cloud应用如果是服务调用方，需要使用SDK并添加开启路由注解`@EnableTsfRoute`
-- 服务调用方配置好相应规则的内容（比如内测user_id之类的值）
+- 添加依赖及注解`@EnableTsfRoute`(服务调用方和提供方)
+- 服务调用方配置好相应规则的内容，通过`TsfContext`进行自定义标签的设置
 
-> 在新版本（2.0.0 Release）中，@EnableTsf及下属的注解都被标记为废弃，但目前尚未找到替代的注解，猜测有可能TSF平台发展后续是否倾向于删除这些注解
+> TSF新版本(2.0.0 Release)中，`@EnableTsf`及下属注解都被标记为废弃，目前尚未找到替代的注解
+>
 
 ### 服务限流
 
 https://cloud.tencent.com/document/product/649/16621
 
-- 在服务提供方添加依赖，注解使用`@EnableTsfRateLimit`
-- 在TSF平台建立限流规则
+- 添加依赖及注解`@EnableTsfRateLimit`(服务提供方)
+- 建立限流规则
 - 启动限流即可
 
 ### 服务熔断
 
-- 在服务提供方添加依赖，注解使用`@EnableTsfCircuitBreaker`
-- 在TSF平台配置熔断规则
+- 添加依赖及注解`@EnableTsfCircuitBreaker`(服务调用方)
+- TSF平台配置熔断规则
 
   也可以自己写配置文件，但是会被线上配置的规则覆盖，测试时可用
 
@@ -156,20 +177,24 @@ TSF摒弃了已经不再继续维护的Hystrix断路器，采用官方推荐的*
 
 https://cloud.tencent.com/document/product/649/40582
 
-- 在服务提供方添加依赖，注解使用`@EnableTsfFaultTolerance`
-- 如果需要使用 feign 的如下降级功能，则需要关闭 feign的 hystrix 开关
+- 添加依赖及注解`@EnableTsfFaultTolerance`(服务调用方)
+- 如果需要使用feign的降级功能(如下)，则需要关闭Hystrix开关(若当前没有Hystrix的依赖可忽略)
 
 ```Java
-@FeignClient(name = "circuit-breaker-mock-service", fallbackFactory = HystrixClientFallbackFactory.class)
-@FeignClient(name = "circuit-breaker-mock-service", fallback = FeignClientFallback.class)
+@FeignClient(name="circuit-breaker-mock-service",fallbackFactory=HystrixClientFallbackFactory.class)
+@FeignClient(name="circuit-breaker-mock-service",fallback=FeignClientFallback.class)
 ```
+关闭Hystrix开关(默认是关闭的，如果之前使用了该功能，可以删除该配置或者关闭)
+
 ```yaml
-# 关闭Hystrix开关，（默认是关闭的，如果之前使用了该功能，可以删除该配置或者关闭）
 feign:
   hystrix:
     enabled: false
-    
-# 打开 TSF 开关：
+```
+
+打开TSF熔断开关
+
+```yaml
 feign:
   tsf:
     enabled: true
@@ -197,7 +222,7 @@ public void doWork2() throws InterruptedException {
 
 ## TSF云原生应用
 
-https://cloud.tencent.com/document/product/649/19049
+https://cloud.tencent.com/document/product/649/54147
 
 > 原生应用的服务治理功能是基于TSF Mesh来实现的
 >
@@ -213,6 +238,8 @@ https://cloud.tencent.com/document/product/649/19049
 
 `spec.yaml`支持本地配置和**控制台配置**
 
+目前只支持Consul Eureka和Nacos
+
 ### ~~<b style="color:red">配置</b>~~
 
 **配置类型**
@@ -225,13 +252,7 @@ https://cloud.tencent.com/document/product/649/19049
 
 文件配置：支持用户通过控制台将配置下发到服务器的指定目录。应用程序通过读取该目录下的配置文件实现特殊的业务逻辑
 
-> 原生应用与Mesh应用不支持应用配置和全局配置
->
-> 应用配置和全局配置都要业务应用主动去TSF拉取/轮询配置的变更然后更改最后refresh，默认的springcloud云原生应用实现了拉取consul的配置，但只能更新本地配置，无法更新应用配置和全局配置，因此云原生也支持本地配置
->
-> 文件配置都支持
-
-若想支持应用配置和全局配置需要使用**TSF框架SDK**集成
+> 原生应用与Mesh应用不支持应用配置和全局配置，文件配置都支持，若想支持应用配置和全局配置需要使用TSF**框架SDK**集成
 
 ### 监控
 
@@ -241,27 +262,22 @@ https://cloud.tencent.com/document/product/649/54151
 
 目前支持Zipkin的[B3 Propagation](https://github.com/openzipkin/b3-propagation)，所以只要是和Zipkin B3兼容的SDK均可，例如Spring Cloud Sleuth
 
-> 针对其他语言类型的Mesh应用，sidecar可通过'tsf-mesh-tag'header获取应用相关的业务信息
-
 ### 服务鉴权
 
 https://cloud.tencent.com/document/product/649/19049
 
 基于自定义标签`headers={'custom-key':'custom-value'}`
 
->目前Mesh集成的自定义标签有两种: 1.普通标签 2:mesh标签(感觉这个更具有业务含义，指定被mesh采集使用)
-
 ### 服务路由
 
 https://cloud.tencent.com/document/product/649/54147
 
-- 需要与Mesh配合，在请求头里加入指定的key
+与Mesh配合添加自定义标签，在请求头里加入指定的key
 
 ```Java
 // 以拦截FeignClient请求为例
 @Configuration
 public class FeignConfig {
-
     @Bean
     public RequestInterceptor requestInterceptor() {
         return new RequestInterceptor() {
@@ -275,18 +291,18 @@ public class FeignConfig {
 }
 ```
 
-> 猜测直接在TSF平台配置路由规则，也可以实现路由，尚未验证
-
 ### 服务限流
 
 https://cloud.tencent.com/document/product/649/54152
 
-原生Spring cloud可以借助TSF平台实现服务限流，有两种方式
+原生Spring cloud可以借助TSF平台实现服务限流，有两种方式:
 
-- 自定义标签，需在 HTTP 请求头添加 tsf-mesh-tag: KEY=VALUE
+- 自定义标签，需在HTTP请求头添加tsf-mesh-tag: KEY=VALUE
 - 同上服务路由方式，配合Service Mesh，加入 template.header("custom-key", "custom-value")
 
-服务限流的组件不支持通过property配置，需自行修改代码来关闭
+业务应用若需使用TSF的限流功能需要禁用自身组件的限流
+
+业务服务相关的限流组件(Resilience和Sentinel)不支持通过property配置，需自行修改代码来关闭
 
 ### 服务熔断
 
@@ -296,7 +312,7 @@ https://cloud.tencent.com/document/product/649/54152
 
 **Hystrix/Spring Cloud Hystrix**
 
-> springcloud 2021已经移除了Hystrix改为**Spring Cloud Circuit Breaker - Resilience**
+> 在springcloud 2020中已经移除了Hystrix改为**Spring Cloud Circuit Breaker - Resilience4j**
 
 ```yaml
 # 如果用了Feign，此方式也可以关闭其中的熔断功能
@@ -307,17 +323,9 @@ hystrix:
        enabled: false
 ```
 
-> 云原生Mesh应用集成TSF熔断需要关闭自身熔断是否可用如下配置
-
-```yaml
-feign:
-  hystrix:
-    enabled: false
-```
-
 **Resilience**
 
-不支持配置，只能通过 transitionToDisabledState() 或自行修改代码来关闭。transitionToDisabledState 示例如下:
+不支持配置，只能通过`transitionToDisabledState()`或自行修改代码来关闭。`transitionToDisabledState()`示例如下:
 
 ```Java
 public class ProviderServiceResilience {
@@ -370,10 +378,6 @@ spring:
 ### ~~<b style="color:red">服务容错</b>~~
 
 暂未找到相关文档
-
-> 猜测服务容错需要原生服务自己实现
->
-> 即使使用的是TSF SDK集成方式，容错规则同样需要服务自己实现
 
 ## 术语
 

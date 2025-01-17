@@ -1,14 +1,37 @@
-## <span style="color:gray">TL;DR</span>
+## TL;DR
 
-TODO
+基于TCS私有云平台集成TSF一站式微服务框架的方式:
 
-## <span style="color:gray">开发概述</span>
+1. 云原生Mesh应用: 0代码侵入，部分微服务功能无法实现
+2. 框架SDK: 需要引入依赖和部分代码侵入，更全面的适配TSF，能正常使用全量功能
 
-TODO
+其他集成方式暂不在本文章讨论范围
 
-## <span style="color:gray">背景介绍</span>
+具体Demo参考: https://github.com/zijie122/tsf-simple-demo
 
-TODO
+## 开发概述
+
+| 功能       | 云原生应用                             | 普通应用               |
+| ---------- | -------------------------------------- | ---------------------- |
+| 适用场景   | 存量业务应用开源Spring Cloud零代码改造 | 新业务全新技术框架选型 |
+| 集成方式   | Mesh流量劫持                           | 框架SDK                |
+| 注册发现   | ✓                                      | ✓                      |
+| 服务鉴权   | ✓                                      | ✓                      |
+| 服务限流   | ✓                                      | ✓                      |
+| 服务熔断   | ✓                                      | ✓                      |
+| 服务路由   | ✓                                      | ✓                      |
+| 调用链     | ✓ 支持服务级别                         | ✓                      |
+| 日志服务   | ✓                                      | ✓                      |
+| 配置管理   | 不支持                                 | ✓                      |
+| 优雅下线   | ✓                                      | ✓                      |
+| 全链路灰度 | ✓                                      | ✓                      |
+| 单元化     | 不支持                                 | ✓                      |
+
+## 背景介绍
+
+某证券行业的客户在对自身的微服务应用进行云迁移，需要支持的微服务应用包含多版本springcloud应用，其他语言(Go Python)应用，以及部署在虚拟机上的应用等
+
+在大的信创背景下，客户选择了基于TCS私有云平台的TSF一站式微服务框架进行集成，结合常用的微服务组件相关功能我们目前针对TSF提供的**框架SDK**和**云原生Mesh应用**两种集成方式进行调研
 
 ## 版本配套关系
 
@@ -122,7 +145,7 @@ public class SimpleConfigurationListener implements ConfigChangeCallback {
 
 `com.tencent.tsf.consul.config.ConfigWatch` 监听Consul的配置变化
 
-> 该功能为tsf内置功能，原生consul框架也有相同的逻辑获取配置变更，可见consul-demo
+> 该功能为TSF内置功能，原生consul框架也有相同的ConfigWatch逻辑获取配置变更，可见consul-demo
 
 #### 监控
 
@@ -168,12 +191,12 @@ https://cloud.tencent.com/document/product/649/16621
 
 1. 在TSF平台配置路由规则
 
-- 添加依赖及注解(服务提供方)
+- 添加依赖及注解`@EnableTsfRoute`(服务提供方)
 - 在TSF控制台维护路由规则，规则需要配置在服务提供方
 
 2. 基于自定义标签配置路由规则
 
-- 添加依赖及注解(服务调用方和提供方)
+- 添加依赖及注解`@EnableTsfRoute`(服务调用方和提供方)
 - 服务调用方配置好相应规则的内容，通过`TsfContext`进行自定义标签的设置
 
 > TSF新版本(2.0.0 Release)中，`@EnableTsf`及下属注解都被标记为废弃，目前尚未找到替代的注解
@@ -258,11 +281,15 @@ https://cloud.tencent.com/document/product/649/54147
 
 #### 服务注册
 
-需要配置`spec.yaml`文件文件用于描述服务信息，sidecar会通过服务描述文件将服务注册到服务注册中心
-
-⚠️ 目前只支持Consul Eureka和Nacos
+需要配置`spec.yaml`文件文件用于描述服务信息，sidecar会通过服务描述文件将服务注册到TSF的服务注册中心
 
 `spec.yaml`支持本地配置和**控制台配置**
+
+目前只支持Consul Eureka和Nacos
+
+⚠️ 只有Consul Eureka和Nacos的获取服务列表及实例列表的出口流量会被mesh劫持返回内置consul注册中心的信息
+
+https://cloud.tencent.com/document/product/649/33884#iptables-.E8.A7.84.E5.88.99
 
 #### ~~<b style="color:red">配置</b>~~
 
@@ -276,12 +303,10 @@ https://cloud.tencent.com/document/product/649/54147
 
 文件配置：支持用户通过控制台将配置下发到服务器的指定目录。应用程序通过读取该目录下的配置文件实现特殊的业务逻辑
 
-> 原生应用与Mesh应用不支持应用配置和全局配置，文件配置都支持，若想支持应用配置和全局配置需要使用**TSF框架SDK**集成
+> 原生应用与Mesh应用不支持应用配置和全局配置，文件配置都支持，若想支持应用配置和全局配置需要使用TSF**框架SDK**集成
 >
 
-⚠️ 默认的springcloud云原生应用的注册中心是通过sidecar代理本地网络基于TSF内置consul实现的
-
-sidecar无法连接到业务应用指定的配置中心，因此无法实现配置管理功能
+⚠️ 云原生Mesh应用通过**DNS和特定IP**(注册到注册中心的服务名和IP)拦截到出口流量进行服务治理，由于云原生自带的consul组件的configwatch机制连接的是业务服务自己的注册中心，不是TSF内置的注册中心，因此无法使用TSF的配置管理
 
 #### 监控
 
@@ -335,7 +360,7 @@ https://cloud.tencent.com/document/product/649/54152
 原生Srping cloud可以借助TSF平台实现服务限流，有两种方式:
 
 - 自定义标签，需在HTTP请求头添加tsf-mesh-tag: KEY=VALUE
-- 同上服务路由方式，配合Service Mesh
+- 同上服务路由方式，配合Service Mesh，加入 template.header("custom-key", "custom-value")
 
 业务应用若需使用TSF的限流功能需要禁用自身组件的限流
 
