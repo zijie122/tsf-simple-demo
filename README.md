@@ -1,15 +1,17 @@
 ## TL;DR
 
-基于TCS私有云平台集成TSF一站式微服务框架的方式:
+基于TCS私有云平台集成TSF一站式微服务框架的方式有以下两种:
 
 1. 云原生Mesh应用: 0代码侵入，部分微服务功能无法实现
 2. 框架SDK: 需要引入依赖和部分代码侵入，更全面的适配TSF，能正常使用全量功能
 
 其他集成方式暂不在本文章讨论范围
 
+读者可以通过两种集成方式的对比基于当前应用场景选择合适的接入方式
+
 具体Demo参考: https://github.com/zijie122/tsf-simple-demo
 
-## 开发概述
+## 集成方式概览
 
 | 功能       | 云原生应用                             | 普通应用               |
 | ---------- | -------------------------------------- | ---------------------- |
@@ -281,15 +283,7 @@ https://cloud.tencent.com/document/product/649/54147
 
 #### 服务注册
 
-需要配置`spec.yaml`文件文件用于描述服务信息，sidecar会通过服务描述文件将服务注册到TSF的服务注册中心
-
-`spec.yaml`支持本地配置和**控制台配置**
-
 目前只支持Consul Eureka和Nacos
-
-⚠️ 只有Consul Eureka和Nacos的获取服务列表及实例列表的出口流量会被mesh劫持返回内置consul注册中心的信息
-
-https://cloud.tencent.com/document/product/649/33884#iptables-.E8.A7.84.E5.88.99
 
 #### ~~<b style="color:red">配置</b>~~
 
@@ -304,9 +298,6 @@ https://cloud.tencent.com/document/product/649/33884#iptables-.E8.A7.84.E5.88.99
 文件配置：支持用户通过控制台将配置下发到服务器的指定目录。应用程序通过读取该目录下的配置文件实现特殊的业务逻辑
 
 > 原生应用与Mesh应用不支持应用配置和全局配置，文件配置都支持，若想支持应用配置和全局配置需要使用TSF**框架SDK**集成
->
-
-⚠️ 云原生Mesh应用通过**DNS和特定IP**(注册到注册中心的服务名和IP)拦截到出口流量进行服务治理，由于云原生自带的consul组件的configwatch机制连接的是业务服务自己的注册中心，不是TSF内置的注册中心，因此无法使用TSF的配置管理
 
 #### 监控
 
@@ -484,3 +475,8 @@ https://help.aliyun.com/document_detail/159741.html
 服务调用配置，可基于此实现灰度环境
 
 https://cloud.tencent.com/document/product/649/43464
+
+## 遗留问题
+
+* [ ] 云原生应用Mesh代理原理，为啥只能代理Consul Eureka Nacos
+* [ ] 云原生应用Mesh集成不支持TSF应用配置和全局配置
