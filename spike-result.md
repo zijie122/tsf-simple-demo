@@ -2,10 +2,10 @@
 
 基于TCS私有云平台集成TSF一站式微服务框架的方式有以下两种:
 
-1. 云原生Mesh应用: 0代码侵入，部分微服务功能无法实现
+1. 云原生Mesh应用: 0代码侵入，部分微服务功能无法实现(如配置管理)
 2. 框架SDK: 需要引入依赖和部分代码侵入，更全面的适配TSF，能正常使用全量功能
 
-其他集成方式暂不在本文章讨论范围
+其他集成方式(如**javaagent**)暂不在本文章讨论范围
 
 读者可以通过两种集成方式的对比基于当前应用场景选择合适的接入方式
 
@@ -31,15 +31,15 @@
 
 ## 背景介绍
 
-某证券行业的客户在对自身的微服务应用进行云迁移，需要支持的微服务应用包含多版本springcloud应用，其他语言(Go Python)应用，以及部署在虚拟机上的应用等
+某证券行业的客户在对自身的微服务应用进行云迁移，需要支持的微服务应用包含: 多版本的SpringCloud应用，其他语言(Go Python)应用，以及需要部署在虚拟机上的应用等
 
-在大的信创背景下，客户选择了基于TCS私有云平台的TSF一站式微服务框架进行集成，结合常用的微服务组件相关功能我们目前针对TSF提供的**框架SDK**和**云原生Mesh应用**两种集成方式进行调研
+在大的信创背景以及自身应用架构下，客户选择了基于TCS私有云平台的TSF一站式微服务框架进行集成，结合常用的微服务组件相关功能我们针对目前TSF提供的**框架SDK**和**云原生Mesh应用**两种集成方式进行调研
 
 ## 版本配套关系
 
 https://cloud.tencent.com/document/product/649/36285
 
-springcloud version: https://spring.io/projects/spring-cloud
+SpringCloud Version: https://spring.io/projects/spring-cloud
 
 ```
 jdk8
@@ -52,7 +52,7 @@ TSF SDK 1.46.x
 
 https://cloud.tencent.com/document/product/649
 
-### 前置配置
+#### 前置配置
 
 * [x] 技术栈选型 https://cloud.tencent.com/document/product/649/73790
 
@@ -75,17 +75,15 @@ https://cloud.tencent.com/document/product/649
 @EnableTsfFaultTolerance // 服务容错
 ```
 
-### 服务注册
+#### 服务注册
 
 运行在TSF平台上的应用无须配置服务注册中心地址，SDK会通过**环境变量**自动获取注册中心地址
 
 TSF搭建时会将内置的consul注册中心地址写入环境变量，应用部署在TSF上后自动获取注入
 
-如果是其他类型的注册中心(如Eureka)需要进行依赖修改和注解更新以支持TSF的consul
+如果是其他类型的注册中心(如[Eureka](https://cloud.tencent.com/document/product/649/16617#.E4.BB.8E-eureka-.E8.BF.81.E7.A7.BB.E5.BA.94.E7.94.A8))迁移到TSF需要进行依赖修改和注解更新以支持TSF的consul
 
-https://cloud.tencent.com/document/product/649/16617#.E4.BB.8E-eureka-.E8.BF.81.E7.A7.BB.E5.BA.94.E7.94.A8
-
-### 配置管理
+#### 配置管理
 
 - 热更新
     - 需要使用`@RefreshScope`
@@ -111,11 +109,11 @@ public class SimpleConfigurationListener implements ConfigChangeCallback {
 
 > 该功能为TSF内置功能，原生consul框架也有相同的ConfigWatch逻辑获取配置变更，可见consul-demo
 
-### 监控
+#### 监控
 
 监控指标: https://cloud.tencent.com/document/product/649/72802
 
-### 调用链
+#### 调用链
 
 - 支持用户在代码中设置标签(Tag)和自定义元数据(CustomMetada)，分别用于调用链的筛选和附带业务信息
 
@@ -131,15 +129,23 @@ public class SimpleConfigurationListener implements ConfigChangeCallback {
 
 必须部署到TSF中才会生成traceid和spanid到MDC
 
-### 服务鉴权
+- 配置日志 pattern
+
+  ```yaml
+  logging:
+    pattern:
+      level: "%-5level [${spring.application.name},%mdc{trace_id},%mdc{span_id},]"
+  ```
+
+#### 服务鉴权
 
 https://cloud.tencent.com/document/product/649/16621#.E6.9C.8D.E5.8A.A1.E9.89.B4.E6.9D.83
 
-- 请求双方都需要开启注解
+- 请求双方都需要添加依赖及注解
 - 调用方(consumer)和被调方(provider)想使用基本tag的鉴权规则:
     - consumer需要通过`TsfContext`设置tag， provider需要在控制台上设置tag鉴权规则
 
-### 服务路由
+#### 服务路由
 
 https://cloud.tencent.com/document/product/649/16621
 
@@ -158,7 +164,7 @@ https://cloud.tencent.com/document/product/649/16621
 > TSF新版本(2.0.0 Release)中，`@EnableTsf`及下属注解都被标记为废弃，目前尚未找到替代的注解
 >
 
-### 服务限流
+#### 服务限流
 
 https://cloud.tencent.com/document/product/649/16621
 
@@ -166,7 +172,7 @@ https://cloud.tencent.com/document/product/649/16621
 - 建立限流规则
 - 启动限流即可
 
-### 服务熔断
+#### 服务熔断
 
 - 添加依赖及注解`@EnableTsfCircuitBreaker`(服务调用方)
 - TSF平台配置熔断规则
@@ -175,7 +181,7 @@ https://cloud.tencent.com/document/product/649/16621
 
 TSF摒弃了已经不再继续维护的Hystrix断路器，采用官方推荐的**Resilience4J**作为底层实现
 
-### 服务容错
+#### 服务容错
 
 https://cloud.tencent.com/document/product/649/40582
 
@@ -234,11 +240,11 @@ https://cloud.tencent.com/document/product/649/54147
 >
 > https://cloud.tencent.com/document/product/649/33884
 
-### 服务注册
+#### 服务注册
 
-目前只支持Consul Eureka和Nacos
+云原生应用无需任何改造，目前只支持Consul Eureka和Nacos
 
-### ~~<b style="color:red">配置</b>~~
+#### ~~<b style="color:red">配置</b>~~
 
 **配置类型**
 
@@ -250,23 +256,25 @@ https://cloud.tencent.com/document/product/649/54147
 
 文件配置：支持用户通过控制台将配置下发到服务器的指定目录。应用程序通过读取该目录下的配置文件实现特殊的业务逻辑
 
-> 原生应用与Mesh应用不支持应用配置和全局配置，文件配置都支持，若想支持应用配置和全局配置需要使用TSF**框架SDK**集成
+> 云原生应用与Mesh应用不支持应用配置和全局配置，文件配置都支持，若想支持应用配置和全局配置需要使用TSF**框架SDK**集成
 
-### 监控
+#### 监控
 
-### 调用链
+监控指标: https://cloud.tencent.com/document/product/649/72802
+
+#### 调用链
 
 https://cloud.tencent.com/document/product/649/54151
 
 目前支持Zipkin的[B3 Propagation](https://github.com/openzipkin/b3-propagation)，所以只要是和Zipkin B3兼容的SDK均可，例如Spring Cloud Sleuth
 
-### 服务鉴权
+#### 服务鉴权
 
 https://cloud.tencent.com/document/product/649/19049
 
 基于自定义标签`headers={'custom-key':'custom-value'}`
 
-### 服务路由
+#### 服务路由
 
 https://cloud.tencent.com/document/product/649/54147
 
@@ -289,20 +297,20 @@ public class FeignConfig {
 }
 ```
 
-### 服务限流
+#### 服务限流
 
 https://cloud.tencent.com/document/product/649/54152
 
 原生Spring cloud可以借助TSF平台实现服务限流，有两种方式:
 
-- 自定义标签，需在HTTP请求头添加tsf-mesh-tag: KEY=VALUE
-- 同上服务路由方式，配合Service Mesh，加入 template.header("custom-key", "custom-value")
+- 自定义标签，需在HTTP请求头添加`tsf-mesh-tag: KEY=VALUE`
+- 同上服务路由方式，配合Service Mesh，加入`template.header("custom-key", "custom-value")`
 
 业务应用若需使用TSF的限流功能需要禁用自身组件的限流
 
 业务服务相关的限流组件(Resilience和Sentinel)不支持通过property配置，需自行修改代码来关闭
 
-### 服务熔断
+#### 服务熔断
 
 https://cloud.tencent.com/document/product/649/54152
 
@@ -373,7 +381,7 @@ spring:
         enabled: false
 ```
 
-### ~~<b style="color:red">服务容错</b>~~
+#### ~~<b style="color:red">服务容错</b>~~
 
 暂未找到相关文档
 

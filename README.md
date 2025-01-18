@@ -1,16 +1,3 @@
-## TL;DR
-
-基于TCS私有云平台集成TSF一站式微服务框架的方式有以下两种:
-
-1. 云原生Mesh应用: 0代码侵入，部分微服务功能无法实现
-2. 框架SDK: 需要引入依赖和部分代码侵入，更全面的适配TSF，能正常使用全量功能
-
-其他集成方式暂不在本文章讨论范围
-
-读者可以通过两种集成方式的对比基于当前应用场景选择合适的接入方式
-
-具体Demo参考: https://github.com/zijie122/tsf-simple-demo
-
 ## 集成方式概览
 
 | 功能       | 云原生应用                             | 普通应用               |
@@ -31,15 +18,15 @@
 
 ## 背景介绍
 
-某证券行业的客户在对自身的微服务应用进行云迁移，需要支持的微服务应用包含多版本springcloud应用，其他语言(Go Python)应用，以及部署在虚拟机上的应用等
+某证券行业的客户在对自身的微服务应用进行云迁移，需要支持的微服务应用包含: 多版本的SpringCloud应用，其他语言(Go Python)应用，以及需要部署在虚拟机上的应用等
 
-在大的信创背景下，客户选择了基于TCS私有云平台的TSF一站式微服务框架进行集成，结合常用的微服务组件相关功能我们目前针对TSF提供的**框架SDK**和**云原生Mesh应用**两种集成方式进行调研
+在大的信创背景以及自身应用架构下，客户选择了基于TCS私有云平台的TSF一站式微服务框架进行集成，结合常用的微服务组件相关功能我们针对目前TSF提供的**框架SDK**和**云原生Mesh应用**两种集成方式进行调研
 
 ## 版本配套关系
 
 https://cloud.tencent.com/document/product/649/36285
 
-springcloud version: https://spring.io/projects/spring-cloud
+SpringCloud Version: https://spring.io/projects/spring-cloud
 
 ```
 jdk8
@@ -76,19 +63,23 @@ TSF SDK 1.46.x
 
 - 访问 http://localhost:8500/ui 和 http://localhost:18085/test
 
-> 
->
+
+
+
+
 > 以下介绍中所有加了⚠️的内容都是根据逻辑的猜测，没有基于真实的TSF环境进行测试
 >
-> 
+
+
+
+
 
 ## TSF框架SDK
 
 https://cloud.tencent.com/document/product/649
 
-> ⚠️ 框架SDK和SpringCloudTencent集成区别在于框架SDK更针对SpringCloud应用
+> ⚠️ 框架SDK和SpringCloudTencent集成区别在于框架SDK更针对SpringCloud应用，而SpringCloudTencent可支持普通的java应用进行云化并提供TSF的一站式功能
 >
-> 而SpringCloudTencent可支持普通的java应用进行云化并提供TSF的一站式功能
 
 #### 前置配置
 
@@ -119,7 +110,7 @@ https://cloud.tencent.com/document/product/649
 
 TSF搭建时会将内置的consul注册中心地址写入环境变量，应用部署在TSF上后自动获取注入
 
-如果是其他类型的注册中心(如Eureka)需要进行依赖修改和注解更新以支持TSF的consul
+如果是其他类型的注册中心(如Eureka)迁移到TSF需要进行依赖修改和注解更新以支持TSF的consul
 
 https://cloud.tencent.com/document/product/649/16617#.E4.BB.8E-eureka-.E8.BF.81.E7.A7.BB.E5.BA.94.E7.94.A8
 
@@ -169,7 +160,7 @@ public class SimpleConfigurationListener implements ConfigChangeCallback {
 
 必须部署到TSF中才会生成traceid和spanid到MDC
 
-> ⚠️ 需要修改logging配置
+- 配置日志 pattern
 
 ```yaml
 logging:
@@ -283,7 +274,7 @@ https://cloud.tencent.com/document/product/649/54147
 
 #### 服务注册
 
-目前只支持Consul Eureka和Nacos
+云原生应用无需任何改造，目前只支持Consul Eureka和Nacos
 
 #### ~~<b style="color:red">配置</b>~~
 
@@ -301,13 +292,15 @@ https://cloud.tencent.com/document/product/649/54147
 
 #### 监控
 
-⚠️ 指标信息和框架SDK一致
+监控指标: https://cloud.tencent.com/document/product/649/72802
 
 #### 调用链
 
 https://cloud.tencent.com/document/product/649/54151
 
 目前支持Zipkin的[B3 Propagation](https://github.com/openzipkin/b3-propagation)，所以只要是和Zipkin B3兼容的SDK均可，例如Spring Cloud Sleuth
+
+由于是通过TSF Mesh流量劫持实现，因此不支持方法级别的调用
 
 > ⚠️ 针对其他语言类型的Mesh应用，sidecar可通过'tsf-mesh-tag'header自定义标签获取应用相关的业务信息实现调用链
 
@@ -316,8 +309,6 @@ https://cloud.tencent.com/document/product/649/54151
 https://cloud.tencent.com/document/product/649/19049
 
 基于自定义标签`headers={'custom-key':'custom-value'}`
-
->⚠️ 目前Mesh集成的自定义标签有两种: 1.普通标签 2:mesh标签(感觉这个更具有业务含义，指定被mesh采集使用)
 
 #### 服务路由
 
@@ -350,8 +341,8 @@ https://cloud.tencent.com/document/product/649/54152
 
 原生Srping cloud可以借助TSF平台实现服务限流，有两种方式:
 
-- 自定义标签，需在HTTP请求头添加tsf-mesh-tag: KEY=VALUE
-- 同上服务路由方式，配合Service Mesh，加入 template.header("custom-key", "custom-value")
+- 自定义标签，需在HTTP请求头添加`tsf-mesh-tag: KEY=VALUE`
+- 同上服务路由方式，配合Service Mesh，加入`template.header("custom-key", "custom-value")`
 
 业务应用若需使用TSF的限流功能需要禁用自身组件的限流
 
@@ -478,5 +469,20 @@ https://cloud.tencent.com/document/product/649/43464
 
 ## 遗留问题
 
-* [ ] 云原生应用Mesh代理原理，为啥只能代理Consul Eureka Nacos
-* [ ] 云原生应用Mesh集成不支持TSF应用配置和全局配置
+* [ ] TSF Mesh如何代理云原生应用的注册中心(支持Consul Eureka Nacos)
+
+  -- 监听注册中心(Consul Eureka Nacos)端口拦截代理部分请求到TSF内置的Consul注册中心
+  
+  如: 注册请求，获取服务列表请求，获取实例列表请求
+  
+  https://cloud.tencent.com/developer/article/1809735
+  
+* [ ] 云原生Mesh应用和Mesh应用不支持远程配置(TSF应用配置和全局配置)
+
+  -- 未拦截/代理配置相关请求
+
+  详见配置管理: https://main.qcloudimg.com/raw/document/debug/product/pdf/649_36499_cn.pdf
+
+* [ ] 自定义标签中普通标签(headers={KV})和mesh标签(headers={'tsf-mesh-tag': KV})的区别
+
+  -- mesh标签更具有平台特性，与普通的http header区分开
