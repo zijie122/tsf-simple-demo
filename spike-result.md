@@ -54,13 +54,10 @@ https://cloud.tencent.com/document/product/649
 
 #### 前置配置
 
-* [x] 技术栈选型 https://cloud.tencent.com/document/product/649/73790
-
-* [x] Maven配置TSF私服地址
-
-* [x] 引入依赖
-
-* [x] **添加启动注解`@EnableTsf`**
+* 技术栈选型 https://cloud.tencent.com/document/product/649/73790
+* Maven配置TSF私服地址
+* 引入依赖
+* **添加启动注解`@EnableTsf`**
 
 ```java
 @EnableTsfMonitor // 服务监控
@@ -107,7 +104,7 @@ public class SimpleConfigurationListener implements ConfigChangeCallback {
 
 `com.tencent.tsf.consul.config.ConfigWatch` 监听Consul的配置变化
 
-> 该功能为TSF内置功能，原生consul框架也有相同的ConfigWatch逻辑获取配置变更，可见consul-demo
+该功能为TSF内置功能，原生consul框架也有相同的ConfigWatch逻辑获取配置变更，可见consul-demo
 
 #### 监控
 
@@ -161,8 +158,7 @@ https://cloud.tencent.com/document/product/649/16621
 - 添加依赖及注解`@EnableTsfRoute`(服务调用方和提供方)
 - 服务调用方配置好相应规则的内容，通过`TsfContext`进行自定义标签的设置
 
-> TSF新版本(2.0.0 Release)中，`@EnableTsf`及下属注解都被标记为废弃，目前尚未找到替代的注解
->
+TSF新版本(2.0.0 Release)中，`@EnableTsf`及下属注解都被标记为废弃，目前尚未找到替代的注解
 
 #### 服务限流
 
@@ -232,13 +228,13 @@ public void doWork2() throws InterruptedException {
 
 https://cloud.tencent.com/document/product/649/54147
 
-> 原生应用的服务治理功能是基于TSF Mesh来实现的
->
-> 服务调用会经过TSF Mesh的sidecar从而实现服务注册发现，服务调用，负载均衡，路由等功能
->
-> 网络代理分为三个组件: pilot-agent Mesh-DNS Envoy
->
-> https://cloud.tencent.com/document/product/649/33884
+原生应用的服务治理功能是基于TSF Mesh来实现的
+
+服务调用会经过TSF Mesh的sidecar从而实现服务注册发现，服务调用，负载均衡，路由等功能
+
+网络代理分为三个组件: pilot-agent Mesh-DNS Envoy
+
+https://cloud.tencent.com/document/product/649/33884
 
 #### 服务注册
 
@@ -256,7 +252,7 @@ https://cloud.tencent.com/document/product/649/54147
 
 文件配置：支持用户通过控制台将配置下发到服务器的指定目录。应用程序通过读取该目录下的配置文件实现特殊的业务逻辑
 
-> 云原生应用与Mesh应用不支持应用配置和全局配置，文件配置都支持，若想支持应用配置和全局配置需要使用TSF**框架SDK**集成
+云原生应用与Mesh应用不支持应用配置和全局配置，文件配置都支持，若想支持应用配置和全局配置需要使用TSF**框架SDK**集成
 
 #### 监控
 
@@ -318,7 +314,7 @@ https://cloud.tencent.com/document/product/649/54152
 
 **Hystrix/Spring Cloud Hystrix**
 
-> 在springcloud 2020中已经移除了Hystrix改为**Spring Cloud Circuit Breaker - Resilience4j**
+在springcloud 2020中已经移除了Hystrix改为**Spring Cloud Circuit Breaker - Resilience4j**
 
 ```yaml
 # 如果用了Feign，此方式也可以关闭其中的熔断功能
